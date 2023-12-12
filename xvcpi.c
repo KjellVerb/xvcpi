@@ -40,6 +40,7 @@ static int tck_gpio = 17;
 static int tms_gpio = 4;
 static int tdi_gpio = 22;
 static int tdo_gpio = 27;
+static int port_nr = 2542;
 
 /* Transition delay coefficients */
 static unsigned int jtag_delay = 50;
@@ -238,12 +239,12 @@ int main(int argc, char **argv) {
 
   opterr = 0;
 
-  while ((c = getopt(argc, argv, "vc:m:i:o:")) != -1)
+  while ((c = getopt(argc, argv, "vc:m:i:o:p:")) != -1)
     switch (c) {
     case 'v':
       verbose = 1;
     case '?':
-      fprintf(stderr, "usage: %s [-v] [-c 0~31] [-m 0~31] [-i 0~31] [-o 0~31]\n", *argv);
+      fprintf(stderr, "usage: %s [-v] [-c 0~31] [-m 0~31] [-i 0~31] [-o 0~31] [-o 0~9999]\n", *argv);
       return 1;
     case 'c':
       tck_gpio = atoi(optarg);
@@ -253,6 +254,8 @@ int main(int argc, char **argv) {
       tdi_gpio = atoi(optarg);
     case 'o':
       tdo_gpio = atoi(optarg);
+    case '-':
+      port_nr = atoi(optarg);
     }
 
   if (gpio_init() < 1) {
@@ -261,7 +264,7 @@ int main(int argc, char **argv) {
   }
 
   fprintf(stderr, "XVCPI initialized with: \n");
-  fprintf(stderr, "  tck:gpio[%d], tms:gpio[%d], tdi:gpio[%d], tdo:gpio[%d]\n", tck_gpio, tms_gpio, tdi_gpio, tdo_gpio);
+  fprintf(stderr, "  tck:gpio[%d], tms:gpio[%d], tdi:gpio[%d], tdo:gpio[%d], port[%d]\n", tck_gpio, tms_gpio, tdi_gpio, tdo_gpio, port_nr);
 
   s = socket(AF_INET, SOCK_STREAM, 0);
   if (s < 0) {
@@ -272,7 +275,7 @@ int main(int argc, char **argv) {
   i = 1;
   setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &i, sizeof i);
   address.sin_addr.s_addr = INADDR_ANY;
-  address.sin_port = htons(2542);
+  address.sin_port = htons(port_nr);
   address.sin_family = AF_INET;
 
   if (bind(s, (struct sockaddr *)&address, sizeof(address)) < 0) {
